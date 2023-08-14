@@ -1,6 +1,12 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-// import {wait} from './wait'
+
+import {
+  GetResponseTypeFromEndpointMethod,
+  GetResponseDataTypeFromEndpointMethod
+} from '@octokit/types'
+
+import { Octokit } from '@octokit/rest'
 
 interface ConfigFile {
   name: string
@@ -14,9 +20,16 @@ interface Payload {
   validateConfig: boolean
 }
 interface ConfigFiles {
-  files?: Array<ConfigFile>
+  files?: ConfigFile[]
   rootDir: string
 }
+const octokit = new Octokit()
+type GetContentResponseType = GetResponseTypeFromEndpointMethod<
+  typeof octokit.repos.getContent
+>
+type GetContentResponseDataType = GetResponseDataTypeFromEndpointMethod<
+  typeof octokit.repos.getContent
+>
 
 async function run(): Promise<void> {
   try {
@@ -24,26 +37,29 @@ async function run(): Promise<void> {
 
     core.debug(new Date().toTimeString())
     const token = core.getInput('token', { required: true })
-    const octokit = getOctokit(token)
+    const tokenOctokit = getOctokit(token)
 
-    const { data: files } = await octokit.rest.repos.getContent({
+    const files = await tokenOctokit.rest.repos.getContent({
       owner: context.repo.owner,
       repo: context.repo.repo,
-      path: "conf"
+      path: 'conf'
     })
 
     const payload: Payload = {
-      configFiles: { rootDir: "/etc/nginx" },
+      configFiles: { rootDir: '/etc/nginx' },
       ignoreConflict: true,
       validateConfig: true,
       updateTime: new Date().toISOString()
     }
 
-    payload.configFiles.files = (files as Array<any>).map(c => { return { contents: c.content, name: `/etc/nginx/${c.name}` } })
+    if (files instanceof Array) {
+      payload.configFiles.files = (files as any[]).map(c => {
+        return { contents: c.content, name: `/etc/nginx/${c.name}` }
+      })
+    }
 
     core.setOutput('payload', JSON.stringify(payload))
     // core.debug(`Payload: ${JSON.stringify(payload)}`)
-
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }

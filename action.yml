@@ -2,6 +2,9 @@ name: 'NGINX Instance Manager Publisher for GitOps Workflows'
 description: 'Publishes NGINX config files to instances using NGINX Instance manager when there is a repository change event'
 author: 'Daniel Edgar'
 inputs:
+  token:
+    required: true
+    description: 'The GitHub token for the action to use in order to access the repo'
   nim_host:
     required: true
     description: 'The FQDN of the NIM host to publish configs to'
