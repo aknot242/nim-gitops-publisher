@@ -1,11 +1,17 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'NGINX Instance Manager Publisher for GitOps Workflows'
+description: 'Publishes NGINX config files to instances using NGINX Instance manager when there is a repository change event'
+author: 'Daniel Edgar'
 inputs:
-  milliseconds: # change this
+  nim_host:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'The FQDN of the NIM host to publish configs to'
+  conf_files_directory:
+    required: true
+    description: 'The name of the subdirectory in your repo that contains NGINX configuration files to be published to NGINX NGINX Instance Manager'
+  aux_files_directory:
+    required: false
+    description: 'The name of the subdirectory in your repo that contains auxillary files to be published to NGINX NGINX Instance Manager'
+
 runs:
   using: 'node16'
   main: 'dist/index.js'
