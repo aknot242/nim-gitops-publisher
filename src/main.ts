@@ -1,13 +1,6 @@
 import * as core from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 
-import {
-  GetResponseTypeFromEndpointMethod,
-  GetResponseDataTypeFromEndpointMethod
-} from '@octokit/types'
-
-import { Octokit } from '@octokit/rest'
-
 interface ConfigFile {
   name: string
   contents: string
@@ -23,13 +16,6 @@ interface ConfigFiles {
   files?: ConfigFile[]
   rootDir: string
 }
-const octokit = new Octokit()
-type GetContentResponseType = GetResponseTypeFromEndpointMethod<
-  typeof octokit.repos.getContent
->
-type GetContentResponseDataType = GetResponseDataTypeFromEndpointMethod<
-  typeof octokit.repos.getContent
->
 
 async function run(): Promise<void> {
   try {
@@ -37,9 +23,9 @@ async function run(): Promise<void> {
 
     core.debug(new Date().toTimeString())
     const token = core.getInput('token', { required: true })
-    const tokenOctokit = getOctokit(token)
+    const octokit = getOctokit(token)
 
-    const files = await tokenOctokit.rest.repos.getContent({
+    const files = await octokit.rest.repos.getContent({
       owner: context.repo.owner,
       repo: context.repo.repo,
       path: 'conf'
@@ -53,7 +39,7 @@ async function run(): Promise<void> {
     }
 
     if (files instanceof Array) {
-      payload.configFiles.files = (files as any[]).map(c => {
+      payload.configFiles.files = files.map(c => {
         return { contents: c.content, name: `/etc/nginx/${c.name}` }
       })
     }
