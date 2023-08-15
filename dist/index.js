@@ -164,7 +164,6 @@ function publish(githubToken, githubRepo, githubOwner, nimUrl, nimApiToken, conf
             const response = yield sendFilesToNMS(nimUrl, payload, nimApiToken);
             core.debug(response);
             core.setOutput('payload', JSON.stringify(payload));
-            // core.debug(`Payload: ${JSON.stringify(payload)}`)
         }
         catch (error) {
             if (error instanceof Error)
@@ -175,7 +174,7 @@ function publish(githubToken, githubRepo, githubOwner, nimUrl, nimApiToken, conf
 exports.publish = publish;
 function sendFilesToNMS(url, payload, apiToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield (0, node_fetch_1.default)('https://echo.whatis.cloud', {
+        const response = yield (0, node_fetch_1.default)(url, {
             method: 'POST',
             body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json', Authorization: apiToken }

@@ -82,7 +82,6 @@ export async function publish(
     core.debug(response)
 
     core.setOutput('payload', JSON.stringify(payload))
-    // core.debug(`Payload: ${JSON.stringify(payload)}`)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
@@ -93,7 +92,7 @@ export async function sendFilesToNMS(
   payload: Payload,
   apiToken: string
 ): Promise<string> {
-  const response = await fetch('https://echo.whatis.cloud', {
+  const response = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: { 'Content-Type': 'application/json', Authorization: apiToken }

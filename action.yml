@@ -16,7 +16,7 @@ inputs:
     default: ${{ github.event.repository.name }}
   nim_url:
     required: true
-    description: 'The URL of the NIM host to publish configs to'
+    description: 'The URL of the NIM instance group API call which is used to publish configs to. Example: https://nms-preview.nms.nginx.com/namespaces/system/yourname-nms/ui/instance-groups/unique-id-here/config'
   nim_api_token:
     required: true
     description: 'The API token used to publish to NIM'
