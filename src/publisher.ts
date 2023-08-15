@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { getOctokit } from '@actions/github'
+import fetch from 'node-fetch'
 
 interface ConfigFile {
   name: string
@@ -86,7 +87,10 @@ export async function publish(
   }
 }
 
-export async function sendFilesToNMS(url: string, payload: Payload): Promise<string> {
+export async function sendFilesToNMS(
+  url: string,
+  payload: Payload
+): Promise<string> {
   const response = await fetch('https://echo.whatis.cloud', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -99,6 +103,6 @@ export async function sendFilesToNMS(url: string, payload: Payload): Promise<str
   } else if (response.status >= 400) {
     return `HTTP Error: ${response.status} - ${response.statusText}`
   } else {
-    return response.statusText
+    return JSON.stringify(response.json())
   }
 }
