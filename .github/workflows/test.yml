@@ -23,6 +23,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           nim_url: "https://echo.whatis.cloud"
-          nim_api_token: abc123
+          nim_api_token: ${{ secrets.NIM_API_TOKEN }}
           conf_files_directory: conf
           aux_files_directory: auxfiles
