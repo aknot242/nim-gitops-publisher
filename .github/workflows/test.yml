@@ -22,6 +22,6 @@ jobs:
       - uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          nim_host: myhostname
+          nim_url: "https://echo.whatis.cloud"
           conf_files_directory: conf
           aux_files_directory: auxfiles
