@@ -3,7 +3,7 @@ import { context, getOctokit } from '@actions/github'
 
 interface ConfigFile {
   name: string
-  contents: string
+  contents?: string
 }
 
 interface Payload {
@@ -23,13 +23,18 @@ async function run(): Promise<void> {
 
     core.debug(new Date().toTimeString())
     const token = core.getInput('token', { required: true })
+    const confFilesDirectory = core.getInput('conf_files_directory', {
+      required: true
+    })
     const octokit = getOctokit(token)
 
-    const files = await octokit.rest.repos.getContent({
+    const ghOptions = {
       owner: context.repo.owner,
       repo: context.repo.repo,
-      path: 'conf'
-    })
+      path: confFilesDirectory
+    }
+
+    const { data: files } = await octokit.rest.repos.getContent(ghOptions)
 
     const payload: Payload = {
       configFiles: { rootDir: '/etc/nginx' },
@@ -39,9 +44,20 @@ async function run(): Promise<void> {
     }
 
     if (files instanceof Array) {
-      payload.configFiles.files = files.map(c => {
-        return { contents: c.content, name: `/etc/nginx/${c.name}` }
-      })
+      payload.configFiles.files = await Promise.all(
+        files.map(async c => {
+          ghOptions.path = c.path
+          ghOptions['mediaType'] = { format: 'vnd.github.raw' }
+          const content = await octokit.rest.repos.getContent(ghOptions)
+          return {
+            contents: Buffer.from(
+              content['data'] as unknown as string,
+              'utf8'
+            ).toString('base64'),
+            name: `/etc/nginx/${c.name}`
+          }
+        })
+      )
     }
 
     core.setOutput('payload', JSON.stringify(payload))

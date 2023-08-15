@@ -47,12 +47,16 @@ function run() {
             core.debug(`Running action...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
             core.debug(new Date().toTimeString());
             const token = core.getInput('token', { required: true });
+            const confFilesDirectory = core.getInput('conf_files_directory', {
+                required: true
+            });
             const octokit = (0, github_1.getOctokit)(token);
-            const files = yield octokit.rest.repos.getContent({
+            const ghOptions = {
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
-                path: 'conf'
-            });
+                path: confFilesDirectory
+            };
+            const { data: files } = yield octokit.rest.repos.getContent(ghOptions);
             const payload = {
                 configFiles: { rootDir: '/etc/nginx' },
                 ignoreConflict: true,
@@ -60,9 +64,15 @@ function run() {
                 updateTime: new Date().toISOString()
             };
             if (files instanceof Array) {
-                payload.configFiles.files = files.map(c => {
-                    return { contents: c.content, name: `/etc/nginx/${c.name}` };
-                });
+                payload.configFiles.files = yield Promise.all(files.map((c) => __awaiter(this, void 0, void 0, function* () {
+                    ghOptions.path = c.path;
+                    ghOptions['mediaType'] = { format: 'vnd.github.raw' };
+                    const content = yield octokit.rest.repos.getContent(ghOptions);
+                    return {
+                        contents: Buffer.from(content['data'], 'utf8').toString('base64'),
+                        name: `/etc/nginx/${c.name}`
+                    };
+                })));
             }
             core.setOutput('payload', JSON.stringify(payload));
             // core.debug(`Payload: ${JSON.stringify(payload)}`)
