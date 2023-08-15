@@ -3,11 +3,20 @@ description: 'Publishes NGINX config files to instances using NGINX Instance man
 author: 'Daniel Edgar'
 inputs:
   token:
-    required: true
+    required: false
     description: 'The GitHub token for the action to use in order to access the repo'
-  nim_host:
+    default: ${{ github.token }}
+  owner:
+    required: false
+    description: 'The GitHub owner of the repo to monitor. If unspecified, defaults to the owner of the repo wherein this action is running'
+    default: ${{ github.repository_owner }}
+  repo:
+    required: false
+    description: 'The GitHub repo to monitor. If unspecified, defaults to the repo wherein this action is running'
+    default: ${{ github.event.repository.name }}
+  nim_url:
     required: true
-    description: 'The FQDN of the NIM host to publish configs to'
+    description: 'The URL of the NIM host to publish configs to'
   conf_files_directory:
     required: true
     description: 'The name of the subdirectory in your repo that contains NGINX configuration files to be published to NGINX NGINX Instance Manager'
