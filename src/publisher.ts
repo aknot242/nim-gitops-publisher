@@ -23,6 +23,7 @@ export async function publish(
   githubRepo: string,
   githubOwner: string,
   nimUrl: string,
+  nimApiToken: string,
   configFilesDirectory: string,
   auxFilesDirectory?: string
 ): Promise<void> {
@@ -77,7 +78,7 @@ export async function publish(
       )
     }
 
-    const response = await sendFilesToNMS(nimUrl, payload)
+    const response = await sendFilesToNMS(nimUrl, payload, nimApiToken)
     core.debug(response)
 
     core.setOutput('payload', JSON.stringify(payload))
@@ -89,13 +90,13 @@ export async function publish(
 
 export async function sendFilesToNMS(
   url: string,
-  payload: Payload
+  payload: Payload,
+  apiToken: string
 ): Promise<string> {
   const response = await fetch('https://echo.whatis.cloud', {
     method: 'POST',
     body: JSON.stringify(payload),
-    // headers: { 'Content-Type': 'application/json', 'Authorization': 'key=' + API_KEY }
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', Authorization: apiToken }
   })
 
   if (!response.ok) {

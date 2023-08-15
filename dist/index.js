@@ -44,10 +44,19 @@ const publisher_1 = __nccwpck_require__(782);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const token = core.getInput('token');
-            const owner = core.getInput('owner');
-            const repo = core.getInput('repo');
+            const token = core.getInput('token', {
+                required: true
+            });
+            const owner = core.getInput('owner', {
+                required: true
+            });
+            const repo = core.getInput('repo', {
+                required: true
+            });
             const nimUrl = core.getInput('nim_url', {
+                required: true
+            });
+            const nimApiToken = core.getInput('nim_api_token', {
                 required: true
             });
             const configFilesDirectory = core.getInput('conf_files_directory', {
@@ -56,7 +65,7 @@ function run() {
             const auxFilesDirectory = core.getInput('aux_files_directory', {
                 required: false
             });
-            yield (0, publisher_1.publish)(token, repo, owner, nimUrl, configFilesDirectory, auxFilesDirectory);
+            yield (0, publisher_1.publish)(token, repo, owner, nimUrl, nimApiToken, configFilesDirectory, auxFilesDirectory);
         }
         catch (error) {
             if (error instanceof Error)
@@ -114,7 +123,7 @@ exports.sendFilesToNMS = exports.publish = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const node_fetch_1 = __importDefault(__nccwpck_require__(467));
-function publish(githubToken, githubRepo, githubOwner, nimUrl, configFilesDirectory, auxFilesDirectory) {
+function publish(githubToken, githubRepo, githubOwner, nimUrl, nimApiToken, configFilesDirectory, auxFilesDirectory) {
     return __awaiter(this, void 0, void 0, function* () {
         if (githubToken === '') {
             throw new Error('missing github token');
@@ -152,7 +161,7 @@ function publish(githubToken, githubRepo, githubOwner, nimUrl, configFilesDirect
                     };
                 })));
             }
-            const response = yield sendFilesToNMS(nimUrl, payload);
+            const response = yield sendFilesToNMS(nimUrl, payload, nimApiToken);
             core.debug(response);
             core.setOutput('payload', JSON.stringify(payload));
             // core.debug(`Payload: ${JSON.stringify(payload)}`)
@@ -164,13 +173,12 @@ function publish(githubToken, githubRepo, githubOwner, nimUrl, configFilesDirect
     });
 }
 exports.publish = publish;
-function sendFilesToNMS(url, payload) {
+function sendFilesToNMS(url, payload, apiToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield (0, node_fetch_1.default)('https://echo.whatis.cloud', {
             method: 'POST',
             body: JSON.stringify(payload),
-            // headers: { 'Content-Type': 'application/json', 'Authorization': 'key=' + API_KEY }
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', Authorization: apiToken }
         });
         if (!response.ok) {
             return 'Error';
