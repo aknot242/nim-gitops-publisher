@@ -19,7 +19,7 @@ inputs:
     description: 'The URL of the NIM instance group API call which is used to publish configs to. Example: https://nms-preview.nms.nginx.com/namespaces/system/yourname-nms/ui/instance-groups/unique-id-here/config'
   nim_api_token:
     required: true
-    description: 'The API token used to publish to NIM'
+    description: 'The API authorization type and value used to publish to NIM. The token type can vary based on how the NIM APIs are protected. Example 1: Basic abc123 Example 2: APIToken abc123'
   conf_files_directory:
     required: true
     description: 'The name of the subdirectory in your repo that contains NGINX configuration files to be published to NGINX NGINX Instance Manager'
