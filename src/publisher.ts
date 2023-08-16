@@ -1,8 +1,5 @@
 import * as core from '@actions/core'
 import { getOctokit } from '@actions/github'
-import { Octokit } from '@octokit/core'
-import { PaginateInterface } from '@octokit/plugin-paginate-rest'
-import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types'
 import fetch from 'node-fetch'
 
 interface NginxFile {
@@ -87,7 +84,7 @@ async function getGithubFiles(
   githubOwner: string,
   githubRepo: string,
   configFilesDirectory: string,
-  octokit: Octokit & Api & { paginate: PaginateInterface }
+  octokit
 ): Promise<NginxFile[]> {
   const ghOptions = {
     owner: githubOwner,

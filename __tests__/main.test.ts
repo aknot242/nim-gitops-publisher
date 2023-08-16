@@ -32,12 +32,24 @@ const gh = getOctokit('_')
 // const reposMock = jest.spyOn(gh.rest.repos, 'getContent')
 
 test('runs successfully', async () => {
-  await expect(publish('123456', 'reponame', 'ownername', 'https://nimurl', 'abc123', 'abc', '')).resolves.toBeUndefined()
+  await expect(
+    publish(
+      '123456',
+      'reponame',
+      'ownername',
+      'https://nimurl',
+      'abc123',
+      'abc',
+      ''
+    )
+  ).resolves.toBeUndefined()
   // expect(gh.rest.repos.getContent).toHaveBeenCalled()
 })
 
 test('throws invalid token', async () => {
-  await expect(publish('', 'reponame', 'ownername', 'https://nimurl', 'abc123', 'abc', '')).rejects.toThrow('missing github token')
+  await expect(
+    publish('', 'reponame', 'ownername', 'https://nimurl', 'abc123', 'abc', '')
+  ).rejects.toThrow('missing github token')
 })
 
 // shows how the runner will run a javascript action with env / stdout protocol
@@ -60,8 +72,7 @@ test('test runs', () => {
     let res = cp.execFileSync(np, [ip], options)
     console.log('NO ERROR')
     console.log(res.toString())
-  }
-  catch (err) {
+  } catch (err) {
     console.log('output', err)
     // console.log('sdterr', err.stderr.toString())
   }
