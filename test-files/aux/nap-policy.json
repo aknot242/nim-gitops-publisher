@@ -1,0 +1,103 @@
+{
+    "$schema": "https://docs.nginx.com/nginx-app-protect/policy.json",
+    "policy": {
+      "name": "user_defined_single_signature",
+      "template": {
+        "name": "POLICY_TEMPLATE_NGINX_BASE"
+      },
+      "applicationLanguage": "utf-8",
+      "enforcementMode": "blocking",
+      "general": {
+        "trustXff": true,
+        "allowedResponseCodes": [
+          400,
+          401,
+          403,
+          404,
+          502,
+          499,
+          500,
+          413
+        ]
+      },
+      "blocking-settings": {
+        "violations": [
+          {
+            "name": "VIOL_URL",
+            "alarm": true,
+            "block": true
+          }
+        ],
+        "http-protocols": [
+          {
+            "description": "Host header contains IP address",
+            "enabled": false
+          }
+        ]
+      },
+      "urls": [
+        {
+          "name": "/admin*",
+          "type": "wildcard",
+          "isAllowed": false
+        },
+        {
+          "method": "*",
+          "name": "/*",
+          "type": "wildcard",
+          "metacharsOnUrlCheck": true,
+          "metacharOverrides": [
+            {
+              "isAllowed": true,
+              "metachar": "0x24"
+            }
+          ]
+        }
+      ],
+      "signature-requirements": [
+        {
+          "tag": "Fruits",
+          "minRevisionDatetime": "2020-01-20T18:32:02Z",
+          "maxRevisionDatetime": "2020-01-23T18:32:02Z"
+        }
+      ],
+      "signatures": [
+        {
+          "name": "Apple_medium_acc",
+          "tag": "Fruits"
+        },
+        {
+          "signatureId": 200001374,
+          "enabled": false
+        }
+      ],
+      "signature-sets": [
+        {
+          "name": "Fruit_signature_set",
+          "block": true,
+          "alarm": true,
+          "signatureSet": {
+            "filter": {
+              "tagValue": "Fruits",
+              "tagFilter": "eq"
+            }
+          }
+        }
+      ],
+      "bot-defense": {
+        "isEnabled": true,
+        "mitigations": {
+          "signatures": [
+            {
+              "name": "curl",
+              "action": "detect"
+            },
+            {
+              "name": "Postman",
+              "action": "detect"
+            }
+          ]
+        }
+      }
+    }
+  }
