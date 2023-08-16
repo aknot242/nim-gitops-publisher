@@ -1,21 +1,26 @@
 import * as core from '@actions/core'
 import { getOctokit } from '@actions/github'
+import { Octokit } from '@octokit/core'
+import { PaginateInterface } from '@octokit/plugin-paginate-rest'
+import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types'
 import fetch from 'node-fetch'
 
-interface ConfigFile {
+interface NginxFile {
   name: string
   contents?: string
 }
 
+interface NginxFiles {
+  files?: NginxFile[]
+  rootDir: string
+}
+
 interface Payload {
-  configFiles: ConfigFiles
+  configFiles: NginxFiles
+  auxFiles?: NginxFiles
   ignoreConflict: boolean
   updateTime: string
   validateConfig: boolean
-}
-interface ConfigFiles {
-  files?: ConfigFile[]
-  rootDir: string
 }
 
 export async function publish(
@@ -25,7 +30,7 @@ export async function publish(
   nimUrl: string,
   nimApiToken: string,
   configFilesDirectory: string,
-  auxFilesDirectory?: string
+  auxFilesDirectory: string
 ): Promise<void> {
   if (githubToken === '') {
     throw new Error('missing github token')
@@ -38,44 +43,35 @@ export async function publish(
   try {
     core.debug(`Running action...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
 
-    if (typeof auxFilesDirectory !== 'undefined') {
-      // do something
-    }
-
     core.debug(new Date().toTimeString())
 
     const octokit = getOctokit(githubToken)
 
-    const ghOptions = {
-      owner: githubOwner,
-      repo: githubRepo,
-      path: configFilesDirectory
-    }
-
-    const { data: files } = await octokit.rest.repos.getContent(ghOptions)
-
     const payload: Payload = {
-      configFiles: { rootDir: '/etc/nginx' },
+      configFiles: {
+        rootDir: '/etc/nginx',
+        files: await getGithubFiles(
+          githubOwner,
+          githubRepo,
+          configFilesDirectory,
+          octokit
+        )
+      },
       ignoreConflict: true,
       validateConfig: true,
       updateTime: new Date().toISOString()
     }
 
-    if (files instanceof Array) {
-      payload.configFiles.files = await Promise.all(
-        files.map(async c => {
-          ghOptions.path = c.path
-          ghOptions['mediaType'] = { format: 'vnd.github.raw' }
-          const content = await octokit.rest.repos.getContent(ghOptions)
-          return {
-            contents: Buffer.from(
-              content['data'] as unknown as string,
-              'utf8'
-            ).toString('base64'),
-            name: `/etc/nginx/${c.name}`
-          }
-        })
-      )
+    if (auxFilesDirectory !== '') {
+      payload.auxFiles = {
+        rootDir: '/etc/nginx/aux',
+        files: await getGithubFiles(
+          githubOwner,
+          githubRepo,
+          auxFilesDirectory,
+          octokit
+        )
+      }
     }
 
     const response = await sendFilesToNMS(nimUrl, payload, nimApiToken)
@@ -84,6 +80,40 @@ export async function publish(
     core.setOutput('payload', JSON.stringify(payload))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
+  }
+}
+
+async function getGithubFiles(
+  githubOwner: string,
+  githubRepo: string,
+  configFilesDirectory: string,
+  octokit: Octokit & Api & { paginate: PaginateInterface }
+): Promise<NginxFile[]> {
+  const ghOptions = {
+    owner: githubOwner,
+    repo: githubRepo,
+    path: configFilesDirectory
+  }
+
+  const { data: files } = await octokit.rest.repos.getContent(ghOptions)
+
+  if (files instanceof Array) {
+    return await Promise.all(
+      files.map(async c => {
+        ghOptions.path = c.path
+        ghOptions['mediaType'] = { format: 'vnd.github.raw' }
+        const content = await octokit.rest.repos.getContent(ghOptions)
+        return {
+          contents: Buffer.from(
+            content['data'] as unknown as string,
+            'utf8'
+          ).toString('base64'),
+          name: `/etc/nginx/${c.name}`
+        }
+      })
+    )
+  } else {
+    return [] as NginxFile[]
   }
 }
 

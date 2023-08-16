@@ -32,12 +32,12 @@ const gh = getOctokit('_')
 // const reposMock = jest.spyOn(gh.rest.repos, 'getContent')
 
 test('runs successfully', async () => {
-  await expect(publish("123456", "reponame", "ownername", "https://nimurl", "abc123", "abc")).resolves.toBeUndefined()
+  await expect(publish('123456', 'reponame', 'ownername', 'https://nimurl', 'abc123', 'abc', '')).resolves.toBeUndefined()
   // expect(gh.rest.repos.getContent).toHaveBeenCalled()
 })
 
 test('throws invalid token', async () => {
-  await expect(publish("", "reponame", "ownername", "https://nimurl", "abc123", "abc")).rejects.toThrow('missing github token')
+  await expect(publish('', 'reponame', 'ownername', 'https://nimurl', 'abc123', 'abc', '')).rejects.toThrow('missing github token')
 })
 
 // shows how the runner will run a javascript action with env / stdout protocol
@@ -47,8 +47,8 @@ test('test runs', () => {
   process.env['INPUT_REPO'] = 'myreponame'
   process.env['INPUT_NIM_URL'] = 'myhostname'
   process.env['INPUT_NIM_API_TOKEN'] = 'abc123'
-  process.env['INPUT_CONF_FILES_DIRECTORY'] = 'conf'
-  process.env['INPUT_AUX_FILES_DIRECTORY'] = 'auxfiles'
+  process.env['INPUT_CONF_FILES_DIRECTORY'] = 'test-files/conf'
+  process.env['INPUT_AUX_FILES_DIRECTORY'] = 'test-files/aux'
   const np = process.execPath
   const ip = path.join(__dirname, '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
@@ -58,11 +58,11 @@ test('test runs', () => {
 
   try {
     let res = cp.execFileSync(np, [ip], options)
-    console.log("NO ERROR")
+    console.log('NO ERROR')
     console.log(res.toString())
   }
   catch (err) {
-    console.log("output", err)
-    // console.log("sdterr", err.stderr.toString())
+    console.log('output', err)
+    // console.log('sdterr', err.stderr.toString())
   }
 })

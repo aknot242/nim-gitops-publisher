@@ -133,33 +133,22 @@ function publish(githubToken, githubRepo, githubOwner, nimUrl, nimApiToken, conf
         }
         try {
             core.debug(`Running action...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-            if (typeof auxFilesDirectory !== 'undefined') {
-                // do something
-            }
             core.debug(new Date().toTimeString());
             const octokit = (0, github_1.getOctokit)(githubToken);
-            const ghOptions = {
-                owner: githubOwner,
-                repo: githubRepo,
-                path: configFilesDirectory
-            };
-            const { data: files } = yield octokit.rest.repos.getContent(ghOptions);
             const payload = {
-                configFiles: { rootDir: '/etc/nginx' },
+                configFiles: {
+                    rootDir: '/etc/nginx',
+                    files: yield getGithubFiles(githubOwner, githubRepo, configFilesDirectory, octokit)
+                },
                 ignoreConflict: true,
                 validateConfig: true,
                 updateTime: new Date().toISOString()
             };
-            if (files instanceof Array) {
-                payload.configFiles.files = yield Promise.all(files.map((c) => __awaiter(this, void 0, void 0, function* () {
-                    ghOptions.path = c.path;
-                    ghOptions['mediaType'] = { format: 'vnd.github.raw' };
-                    const content = yield octokit.rest.repos.getContent(ghOptions);
-                    return {
-                        contents: Buffer.from(content['data'], 'utf8').toString('base64'),
-                        name: `/etc/nginx/${c.name}`
-                    };
-                })));
+            if (auxFilesDirectory !== '') {
+                payload.auxFiles = {
+                    rootDir: '/etc/nginx/aux',
+                    files: yield getGithubFiles(githubOwner, githubRepo, auxFilesDirectory, octokit)
+                };
             }
             const response = yield sendFilesToNMS(nimUrl, payload, nimApiToken);
             core.debug(response);
@@ -172,6 +161,30 @@ function publish(githubToken, githubRepo, githubOwner, nimUrl, nimApiToken, conf
     });
 }
 exports.publish = publish;
+function getGithubFiles(githubOwner, githubRepo, configFilesDirectory, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ghOptions = {
+            owner: githubOwner,
+            repo: githubRepo,
+            path: configFilesDirectory
+        };
+        const { data: files } = yield octokit.rest.repos.getContent(ghOptions);
+        if (files instanceof Array) {
+            return yield Promise.all(files.map((c) => __awaiter(this, void 0, void 0, function* () {
+                ghOptions.path = c.path;
+                ghOptions['mediaType'] = { format: 'vnd.github.raw' };
+                const content = yield octokit.rest.repos.getContent(ghOptions);
+                return {
+                    contents: Buffer.from(content['data'], 'utf8').toString('base64'),
+                    name: `/etc/nginx/${c.name}`
+                };
+            })));
+        }
+        else {
+            return [];
+        }
+    });
+}
 function sendFilesToNMS(url, payload, apiToken) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield (0, node_fetch_1.default)(url, {
